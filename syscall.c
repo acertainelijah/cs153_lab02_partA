@@ -17,10 +17,12 @@
 int
 fetchint(uint addr, int *ip)
 {
-  struct proc *curproc = myproc();
-
-  if(addr >= curproc->sz || addr+4 > curproc->sz)
-    return -1;
+  //struct proc *curproc = myproc();
+  //cs153 updated sz check
+  //if(((addr >= curproc->sz || addr+4 > curproc->sz) && (addr < ((KERNBASE - 1) - curproc->stack_sz))) || addr > (KERNBASE - 1)){
+    //return -1;
+  //}
+  //cs153
   *ip = *(int*)(addr);
   return 0;
 }
@@ -34,8 +36,7 @@ fetchstr(uint addr, char **pp)
   char *s, *ep;
   struct proc *curproc = myproc();
 
-  if(addr >= curproc->sz)
-    return -1;
+  //cs153 removed sz check
   *pp = (char*)addr;
   ep = (char*)curproc->sz;
   for(s = *pp; s < ep; s++){
@@ -48,7 +49,12 @@ fetchstr(uint addr, char **pp)
 // Fetch the nth 32-bit system call argument.
 int
 argint(int n, int *ip)
-{
+{  
+  //cs153
+  //if(ip == 0){
+    //return -1;
+  //}
+  //cs153
   return fetchint((myproc()->tf->esp) + 4 + 4*n, ip);
 }
 
@@ -59,12 +65,14 @@ int
 argptr(int n, char **pp, int size)
 {
   int i;
-  struct proc *curproc = myproc();
- 
+  //cs153
+  //if(pp == 0){
+    //return -1;
+  //}
+  //cs153
   if(argint(n, &i) < 0)
     return -1;
-  if(size < 0 || (uint)i >= curproc->sz || (uint)i+size > curproc->sz)
-    return -1;
+  //cs153 removed sz check
   *pp = (char*)i;
   return 0;
 }

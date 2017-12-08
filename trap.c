@@ -94,19 +94,22 @@ trap(struct trapframe *tf)
     myproc()->killed = 1;
   }
 
-  if(tf->trapno == T_PGFLT){//cs153
-    cprintf("In trap 14");
+  if(tf->trapno == T_PGFLT){//cs153 case for trap 14 page faults
+    //cprintf("In trap 14\n");
     char* new_page;
     uint page_bottom;
     page_bottom = PGROUNDDOWN(rcr2());
     new_page = kalloc();//returns physical page
     if(new_page == 0){
-      cprintf("no memory left");
+      cprintf("no memory left\n");
     }
-    else{
+    else if(rcr2() > myproc()->stack_sz){// check that address is below
       memset(new_page, 0, PGSIZE);
       mappages(myproc()->pgdir, (void*) page_bottom, PGSIZE, V2P(new_page), PTE_W|PTE_U);
-      cprintf("Allocated a new page");
+      cprintf("Allocated a new page\n");
+    }
+    else{//default handler
+      panic("Address is too far\n");
     }
     return;
   }

@@ -63,45 +63,33 @@ exec(char *path, char **argv)
 
   // Allocate two pages at the next page boundary.
   // Make the first inaccessible.  Use the second as the user stack.
-  cprintf("AA");
   //sz = PGROUNDUP(sz);
-  if((sp = allocuvm(pgdir, (KERNBASE-4)-PGSIZE, (KERNBASE-4))) == 0)//cs153 
+  if((sp = allocuvm(pgdir, (KERNBASE-4)-PGSIZE, (KERNBASE-4))) == 0)//cs153 bottom (K-4)*PGSZ, top stack(K-4)
     goto bad;
-  cprintf("BB"); 
   sp = KERNBASE-4;//cs153 change stack pointer to top of address space
   //curproc->stack_sz = KERNBASE-4;//cs153 delete? maybe use for bonus
-  cprintf("CC");
+
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
-    cprintf("FF");
     if(argc >= MAXARG)
       goto bad;
-    cprintf("HH");
     sp = (sp - (strlen(argv[argc]) + 1)) & ~3;
-    cprintf("II");
     if(copyout(pgdir, sp, argv[argc], strlen(argv[argc]) + 1) < 0)
       goto bad;
-    cprintf("KK");
     ustack[3+argc] = sp;
-	cprintf("LL");
   }
-  cprintf("MM");
   ustack[3+argc] = 0;
-  cprintf("NN");
 
   ustack[0] = 0xffffffff;  // fake return PC
   ustack[1] = argc;
   ustack[2] = sp - (argc+1)*4;  // argv pointer
-  cprintf("OO");
   sp -= (3+argc+1) * 4;
   if(copyout(pgdir, sp, ustack, (3+argc+1)*4) < 0)
     goto bad;
-  cprintf("PP");
   // Save program name for debugging.
   for(last=s=path; *s; s++)
     if(*s == '/')
       last = s+1;
-  cprintf("QQ");
   safestrcpy(curproc->name, last, sizeof(curproc->name));
 
   // Commit to the user image.
@@ -112,11 +100,9 @@ exec(char *path, char **argv)
   curproc->tf->esp = sp;
   switchuvm(curproc);
   freevm(oldpgdir);
-  cprintf("RR");
   return 0;
 
  bad:
-  cprintf("BBAD");
   if(pgdir)
     freevm(pgdir);
   if(ip){

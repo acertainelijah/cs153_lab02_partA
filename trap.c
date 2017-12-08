@@ -98,15 +98,16 @@ trap(struct trapframe *tf)
     //cprintf("In trap 14\n");
     char* new_page;
     uint page_bottom;
-    page_bottom = PGROUNDDOWN(rcr2());
+    page_bottom = PGROUNDDOWN(rcr2());// nearest page mark below
     new_page = kalloc();//returns physical page
-    if(new_page == 0){
+    if(new_page == 0){ //checks if memory left
       cprintf("no memory left\n");
     }
-    else if(rcr2() > myproc()->stack_sz){// check that address is below
+    else if(page_bottom < myproc()->stack_sz){// check that address is below
       memset(new_page, 0, PGSIZE);
       mappages(myproc()->pgdir, (void*) page_bottom, PGSIZE, V2P(new_page), PTE_W|PTE_U);
-      cprintf("Allocated a new page\n");
+      myproc()->stack_sz = page_bottom; // update stack bottom
+      cprintf("Allocated a new page at %d\n", myproc()->stack_sz);
     }
     else{//default handler
       panic("Address is too far\n");

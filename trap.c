@@ -93,6 +93,12 @@ trap(struct trapframe *tf)
             tf->err, cpuid(), tf->eip, rcr2());
     myproc()->killed = 1;
   }
+    //cs153 stack trap check
+    /*if((tf->trapno == 14)){
+      cprintf("trap14: growstack curproc->stack_sz(%d)\n",myproc()->stack_sz);
+      if(growstack()== 0) 
+	break; //success return,else failed;
+    }*/
 
   // Force process exit if it has been killed and is in user space.
   // (If it is still executing in the kernel, let it keep running

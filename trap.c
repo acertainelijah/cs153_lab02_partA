@@ -93,12 +93,23 @@ trap(struct trapframe *tf)
             tf->err, cpuid(), tf->eip, rcr2());
     myproc()->killed = 1;
   }
-    //cs153 stack trap check
-    /*if((tf->trapno == 14)){
-      cprintf("trap14: growstack curproc->stack_sz(%d)\n",myproc()->stack_sz);
-      if(growstack()== 0) 
-	break; //success return,else failed;
-    }*/
+
+  if(tf->trapno == T_PGFLT){//cs153
+    cprintf("In trap 14");
+    char* new_page;
+    uint page_bottom;
+    page_bottom = PGROUNDDOWN(rcr2());
+    new_page = kalloc();//returns physical page
+    if(new_page == 0){
+      cprintf("no memory left");
+    }
+    else{
+      memset(new_page, 0, PGSIZE);
+      mappages(myproc()->pgdir, (void*) page_bottom, PGSIZE, V2P(new_page), PTE_W|PTE_U);
+      cprintf("Allocated a new page");
+    }
+    return;
+  }
 
   // Force process exit if it has been killed and is in user space.
   // (If it is still executing in the kernel, let it keep running

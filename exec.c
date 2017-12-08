@@ -67,7 +67,6 @@ exec(char *path, char **argv)
   if((sp = allocuvm(pgdir, (KERNBASE-4)-PGSIZE, (KERNBASE-4))) == 0)//cs153 bottom (K-4)*PGSZ, top stack(K-4)
     goto bad;
   sp = KERNBASE-4;//cs153 change stack pointer to top of address space
-  //curproc->stack_sz = KERNBASE-4;//cs153 delete? maybe use for bonus
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
@@ -98,6 +97,7 @@ exec(char *path, char **argv)
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
+  curproc->stack_sz = (PGROUNDDOWN(myproc()->tf->esp));//cs153 keep track of bottom of stack
   switchuvm(curproc);
   freevm(oldpgdir);
   return 0;

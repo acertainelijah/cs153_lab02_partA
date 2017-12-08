@@ -41,14 +41,6 @@ exec(char *path, char **argv)
   // Load program into memory.
   sz = 0;
 
-  //cs153
-  //Inititalize an empty page with zeroes
-  //if((sz = allocuvm(pgdir, sz, PGSIZE)) == 0){
-    //goto bad;
-  //}
-  //clearpteu(pgdir, (char*)(sz-PGSIZE));
-  //cs153
-
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
     if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))
       goto bad;
@@ -71,36 +63,45 @@ exec(char *path, char **argv)
 
   // Allocate two pages at the next page boundary.
   // Make the first inaccessible.  Use the second as the user stack.
-  sz = PGROUNDDOWN(KERNBASE-1);
-  if(allocuvm(pgdir, (KERNBASE-1), (KERNBASE-1) - PGSIZE) == 0)//cs153 (changed second paramter: virtual address of the first pg we are mapping) (changed third parameter: virtual address of last page we are mapping)
+  cprintf("AA");
+  //sz = PGROUNDUP(sz);
+  if((sp = allocuvm(pgdir, (KERNBASE-4)-PGSIZE, (KERNBASE-4))) == 0)//cs153 
     goto bad;
-  //clearpteu(pgdir, (char*)(sz + 1*PGSIZE));//cs153 
-  sp = KERNBASE - 1;//cs153 change stack pointer to KERNBASE - 1 (top of stack) instead of sp = sz
-  curproc->stack_sz = (KERNBASE - 1); //cs153 update stack size
-
+  cprintf("BB"); 
+  sp = KERNBASE-4;//cs153 change stack pointer to top of address space
+  //curproc->stack_sz = KERNBASE-4;//cs153 delete? maybe use for bonus
+  cprintf("CC");
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {
+    cprintf("FF");
     if(argc >= MAXARG)
       goto bad;
+    cprintf("HH");
     sp = (sp - (strlen(argv[argc]) + 1)) & ~3;
+    cprintf("II");
     if(copyout(pgdir, sp, argv[argc], strlen(argv[argc]) + 1) < 0)
       goto bad;
+    cprintf("KK");
     ustack[3+argc] = sp;
+	cprintf("LL");
   }
+  cprintf("MM");
   ustack[3+argc] = 0;
+  cprintf("NN");
 
   ustack[0] = 0xffffffff;  // fake return PC
   ustack[1] = argc;
   ustack[2] = sp - (argc+1)*4;  // argv pointer
-
+  cprintf("OO");
   sp -= (3+argc+1) * 4;
   if(copyout(pgdir, sp, ustack, (3+argc+1)*4) < 0)
     goto bad;
-
+  cprintf("PP");
   // Save program name for debugging.
   for(last=s=path; *s; s++)
     if(*s == '/')
       last = s+1;
+  cprintf("QQ");
   safestrcpy(curproc->name, last, sizeof(curproc->name));
 
   // Commit to the user image.
@@ -111,9 +112,11 @@ exec(char *path, char **argv)
   curproc->tf->esp = sp;
   switchuvm(curproc);
   freevm(oldpgdir);
+  cprintf("RR");
   return 0;
 
  bad:
+  cprintf("BBAD");
   if(pgdir)
     freevm(pgdir);
   if(ip){

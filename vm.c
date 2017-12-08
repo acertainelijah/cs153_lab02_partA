@@ -319,38 +319,52 @@ copyuvm(pde_t *pgdir, uint sz, uint stack_sz)//cs153 add stack size parameter
   pte_t *pte;
   uint pa, i, flags;
   char *mem;
+  //struct proc *curproc = myproc();
 
   if((d = setupkvm()) == 0)
     return 0;
- // for(i = 0; i < sz; i += PGSIZE){
-  for(i = 0; i < (KERNBASE-1); i += PGSIZE){
+  for(i = 0; i < sz; i += PGSIZE){//cs153
+    cprintf("22");
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
-      panic("copyuvm: pte should exist");
+      panic("copyuvm: pte should exist1");
+    cprintf("33");
     if(!(*pte & PTE_P))
-      panic("copyuvm: page not present");
+      panic("copyuvm: page not present1");
+    cprintf("44");
     pa = PTE_ADDR(*pte);
     flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
+   cprintf("55"); 
+   if((mem = kalloc()) == 0)
       goto bad;
+    cprintf("66");
     memmove(mem, (char*)P2V(pa), PGSIZE);
     if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
       goto bad;
+    cprintf("77");
   }
+  cprintf("88");
 
-  //cs153 add other for loop
-  for(i=(KERNBASE-1);i>sz;i-=PGSIZE){
+  //cs153 add other for loop to copy last page
+  for(i=PGROUNDDOWN(myproc()->tf->esp);i<KERNBASE-4;i+=PGSIZE){
+    cprintf("99");
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
-      panic("copyuvm: pte should exist");
+      panic("copyuvm: pte should exist2");
+    cprintf("111");
     if(!(*pte & PTE_P))
-      panic("copyuvm: page not present");
+      panic("copyuvm: page not present2");
+    cprintf("222");
     pa = PTE_ADDR(*pte);
     flags = PTE_FLAGS(*pte);
     if((mem = kalloc()) == 0)
       goto bad;
+    cprintf("333");
     memmove(mem, (char*)P2V(pa), PGSIZE);
+    cprintf("444");
     if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
       goto bad; 
+    cprintf("555");
   }
+  cprintf("666");
   //cs153
   return d;
 

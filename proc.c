@@ -215,6 +215,7 @@ fork(void)
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
+  np->stack_sz = myproc()->stack_sz;//cs153
 
   release(&ptable.lock);
 

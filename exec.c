@@ -97,7 +97,10 @@ exec(char *path, char **argv)
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
-  curproc->stack_sz = (PGROUNDDOWN(myproc()->tf->esp));//cs153 keep track of bottom of stack
+  curproc->stack_sz = PGROUNDDOWN(curproc->tf->esp);//cs153 keep track of bottom of stack
+  cprintf("KERNBASE-4: %d\n", KERNBASE-4);
+  cprintf("Stack_sz init: %d\n", curproc->stack_sz);
+  cprintf("K-4-PG: %d\n", (KERNBASE-4)-PGSIZE);
   switchuvm(curproc);
   freevm(oldpgdir);
   return 0;

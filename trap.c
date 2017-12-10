@@ -13,6 +13,7 @@ struct gatedesc idt[256];
 extern uint vectors[];  // in vectors.S: array of 256 entry pointers
 struct spinlock tickslock;
 uint ticks;
+uint rcr22;
 
 void
 tvinit(void)
@@ -77,6 +78,36 @@ trap(struct trapframe *tf)
             cpuid(), tf->cs, tf->eip);
     lapiceoi();
     break;
+  case T_PGFLT://cs153
+    //uint rcr22;
+    rcr22 = rcr2();
+    cprintf("Stack bottom: %d, Rcr2: %d\n", myproc()->stack_sz, rcr22);
+    //cprintf(" Page size: %d", PGSIZE);
+    //cprintf(" Top heap: %d", myproc()->sz);
+    if(PGROUNDDOWN(rcr22) < myproc()->stack_sz){
+    /*  //cprintf(" rcr2() ok");
+      if((allocuvm(myproc()->pgdir, (myproc()->stack_sz-1)-PGSIZE, myproc()->stack_sz-1)) == 0){
+        cprintf("Allocation failed\n");
+      }
+      else{
+        myproc()->stack_sz = PGROUNDDOWN(myproc()->stack_sz-1);
+	//cprintf("Updated stack bot: %d\n", myproc()->stack_sz);
+        cprintf("Memory allocated\n");
+      }
+    }*/
+      int np = ((myproc()->stack_sz - PGROUNDDOWN(rcr22))/PGSIZE);//number of pages
+      for(int i = 0; i < np; i++){
+        allocuvm(myproc()->pgdir, myproc()->stack_sz-PGSIZE-1, myproc()->stack_sz-1);
+        myproc()->stack_sz = myproc()->stack_sz-PGSIZE;
+        cprintf("Mem allocated\n");
+      }
+    }
+    else{
+      panic("Address not below");
+    }
+    //lapiceoi();
+    //switchuvm(myproc());
+    break;
 
   //PAGEBREAK: 13
   default:
@@ -94,7 +125,7 @@ trap(struct trapframe *tf)
     myproc()->killed = 1;
   }
 
-  if(tf->trapno == T_PGFLT){//cs153 case for trap 14 page faults
+  /*if(tf->trapno == T_PGFLT){//cs153 case for trap 14 page faults
     //cprintf("In trap 14\n");
     char* new_page;
     uint page_bottom;
@@ -113,7 +144,7 @@ trap(struct trapframe *tf)
       panic("Address is too far\n");
     }
     return;
-  }
+  }*/
 
   // Force process exit if it has been killed and is in user space.
   // (If it is still executing in the kernel, let it keep running

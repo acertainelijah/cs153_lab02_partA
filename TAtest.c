@@ -5,7 +5,7 @@
 int test(int n)
 {
    //if(n<100) 
-   //if(n<100) 
+   if(n<1000) 
    test(n+1);
    return n;
 }

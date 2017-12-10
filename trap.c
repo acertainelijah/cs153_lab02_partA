@@ -78,26 +78,16 @@ trap(struct trapframe *tf)
             cpuid(), tf->cs, tf->eip);
     lapiceoi();
     break;
-  case T_PGFLT://cs153
-    //uint rcr22;
+  case T_PGFLT://cs153 add trap14 case
     rcr22 = rcr2();
     cprintf("Stack bottom: %d, Rcr2: %d\n", myproc()->stack_sz, rcr22);
     //cprintf(" Page size: %d", PGSIZE);
     //cprintf(" Top heap: %d", myproc()->sz);
     if(PGROUNDDOWN(rcr22) < myproc()->stack_sz){
-    /*  //cprintf(" rcr2() ok");
-      if((allocuvm(myproc()->pgdir, (myproc()->stack_sz-1)-PGSIZE, myproc()->stack_sz-1)) == 0){
-        cprintf("Allocation failed\n");
-      }
-      else{
-        myproc()->stack_sz = PGROUNDDOWN(myproc()->stack_sz-1);
-	//cprintf("Updated stack bot: %d\n", myproc()->stack_sz);
-        cprintf("Memory allocated\n");
-      }
-    }*/
       int np = ((myproc()->stack_sz - PGROUNDDOWN(rcr22))/PGSIZE);//number of pages
       for(int i = 0; i < np; i++){
-        allocuvm(myproc()->pgdir, myproc()->stack_sz-PGSIZE-1, myproc()->stack_sz-1);
+        if((allocuvm(myproc()->pgdir, myproc()->stack_sz-PGSIZE-1, myproc()->stack_sz-1)) == 0)
+           panic("Allocation failed");
         myproc()->stack_sz = myproc()->stack_sz-PGSIZE;
         cprintf("Mem allocated\n");
       }
@@ -105,8 +95,6 @@ trap(struct trapframe *tf)
     else{
       panic("Address not below");
     }
-    //lapiceoi();
-    //switchuvm(myproc());
     break;
 
   //PAGEBREAK: 13
@@ -124,27 +112,6 @@ trap(struct trapframe *tf)
             tf->err, cpuid(), tf->eip, rcr2());
     myproc()->killed = 1;
   }
-
-  /*if(tf->trapno == T_PGFLT){//cs153 case for trap 14 page faults
-    //cprintf("In trap 14\n");
-    char* new_page;
-    uint page_bottom;
-    page_bottom = PGROUNDDOWN(rcr2());// nearest page mark below
-    new_page = kalloc();//returns physical page
-    if(new_page == 0){ //checks if memory left
-      cprintf("no memory left\n");
-    }
-    else if(page_bottom < myproc()->stack_sz){// check that address is below
-      memset(new_page, 0, PGSIZE);
-      mappages(myproc()->pgdir, (void*) page_bottom, PGSIZE, V2P(new_page), PTE_W|PTE_U);
-      myproc()->stack_sz = page_bottom; // update stack bottom
-      cprintf("Allocated a new page at %d\n", myproc()->stack_sz);
-    }
-    else{//default handler
-      panic("Address is too far\n");
-    }
-    return;
-  }*/
 
   // Force process exit if it has been killed and is in user space.
   // (If it is still executing in the kernel, let it keep running

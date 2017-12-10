@@ -64,7 +64,7 @@ exec(char *path, char **argv)
   // Allocate two pages at the next page boundary.
   // Make the first inaccessible.  Use the second as the user stack.
   //sz = PGROUNDUP(sz);
-  if((sp = allocuvm(pgdir, (KERNBASE-4)-PGSIZE, (KERNBASE-4))) == 0)//cs153 bottom (K-4)*PGSZ, top stack(K-4)
+  if((sp = allocuvm(pgdir, (KERNBASE-4)-PGSIZE, (KERNBASE-4))) == 0)//cs153 allocate page for stack at bottom (K-4)*PGSZ, top (K-4)
     goto bad;
   sp = KERNBASE-4;//cs153 change stack pointer to top of address space
 
@@ -98,9 +98,9 @@ exec(char *path, char **argv)
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
   curproc->stack_sz = PGROUNDDOWN(curproc->tf->esp);//cs153 keep track of bottom of stack
-  cprintf("KERNBASE-4: %d\n", KERNBASE-4);
-  cprintf("Stack_sz init: %d\n", curproc->stack_sz);
-  cprintf("K-4-PG: %d\n", (KERNBASE-4)-PGSIZE);
+  //cprintf("KERNBASE-4: %d\n", KERNBASE-4);
+  //cprintf("Stack_sz init: %d\n", curproc->stack_sz);
+  //cprintf("K-4-PG: %d\n", (KERNBASE-4)-PGSIZE);
   switchuvm(curproc);
   freevm(oldpgdir);
   return 0;
